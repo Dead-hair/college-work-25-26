@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Gemini Chat</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Poppins', 'Inter', sans-serif;
+    background: linear-gradient(180deg, #0b0b12, #181621);
+    color: #f5f2f4;
+    height: 100vh;
+    display: flex;
+  }
+
+  .sidebar {
+    width: 270px;
+    background: linear-gradient(180deg, #181621, #1c1a27);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 20px rgba(0,0,0,0.3);
+    border-right: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .sidebar h2 {
+    text-align: center;
+    margin-bottom: 16px;
+    color: #e7c6d0;
+    font-family: 'Cinzel Decorative', serif;
+    letter-spacing: 0.04em;
+  }
+
+  .chat-list {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .chat-item {
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    color: #f0edf0;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .chat-item:hover {
+    background: rgba(235, 198, 208, 0.15);
+  }
+
+  .chat-item.active {
+    background: linear-gradient(90deg, rgba(235,198,208,0.18), rgba(255,192,203,0.12));
+    border-left: 4px solid #e4b3c1;
+    font-weight: 600;
+  }
+
+  .new-chat {
+    margin-top: 12px;
+    padding: 10px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #f3d4da, #ffe5ec);
+    border: none;
+    color: #1a1320;
+    cursor: pointer;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    transition: all 0.25s ease;
+  }
+
+  .new-chat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 14px rgba(228,179,193,0.35);
+  }
+
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #fff url('https://i.imgur.com/6T2yV8Y.png') repeat;
+    background-size: 200px auto;
+    position: relative;
+  }
+
+  .main::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.8);
+    backdrop-filter: blur(4px);
+  }
+
+  .chat-box {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Сообщения */
+  .msg {
+    padding: 10px 16px;
+    border-radius: 16px;
+    white-space: pre-wrap;
+    line-height: 1.6;
+    font-size: 15px;
+    width: fit-content;
+    max-width: 70%;
+    word-wrap: break-word;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+
+  .msg.user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #ffe5ec, #fbdde7);
+    border: 1px solid rgba(228,179,193,0.3);
+    color: #1b0d13;
+  }
+
+  .msg.bot {
+    align-self: flex-start;
+    background: linear-gradient(135deg, #fff, #ffeaf1);
+    border: 1px solid rgba(255,192,203,0.3);
+    color: #1a1320;
+  }
+
+  .msg img {
+    display: block;
+    max-width: 220px;
+    height: auto;
+    margin-top: 8px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+
+  .input {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(0,0,0,0.05);
+    align-items: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  .input textarea {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.1);
+    background: #fff;
+    color: #1a1320;
+    font-size: 15px;
+    resize: none;
+    height: 42px;
+  }
+
+  .input textarea:focus {
+    border-color: #e4b3c1;
+    outline: none;
+  }
+
+  .file-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #ffe5ec, #f3d4da);
+    color: #1a1320;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: 700;
+    transition: all 0.25s ease;
+  }
+
+  .file-label:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(228,179,193,0.35);
+  }
+
+  .input input[type=file] {
+    display: none;
+  }
+
+  .input button {
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(135deg, #f3d4da, #ffe5ec);
+    color: #1a1320;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .input button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 14px rgba(228,179,193,0.35);
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,0.15);
+    border-radius: 6px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0,0,0,0.25);
+  }
+</style>
+
+</head>
+<body>
+<div class="sidebar">
+  <h2>Мои чаты</h2>
+  <div id="chatList" class="chat-list"></div>
+  <button class="new-chat" onclick="newChat()">➕ Новый чат</button>
+</div>
+
+<div class="main">
+  <div id="chatBox" class="chat-box"></div>
+  <div class="input">
+    <textarea id="msgInput" placeholder="Введите сообщение..."></textarea>
+    <label class="file-label" for="imageInput">📎</label>
+    <input type="file" id="imageInput" accept="image/*">
+    <button onclick="sendMsg()">Отправить</button>
+  </div>
+</div>
+
+<script>
+let currentChat = null;
+
+async function loadChats(){
+  const r=await fetch('/get_chats');
+  const chats=await r.json();
+  const list=document.getElementById('chatList');
+  list.innerHTML='';
+  chats.forEach(c=>{
+    const div=document.createElement('div');
+    div.className='chat-item'+(c.name===currentChat?' active':'');
+    div.textContent=c.title;
+    div.onclick=()=>switchChat(c.name);
+    list.appendChild(div);
+  });
+}
+
+async function switchChat(name){
+  currentChat=name;
+  const r=await fetch('/load_chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat:name})});
+  const j=await r.json();
+  renderMessages(j.history||[]);
+  await loadChats();
+}
+
+async function newChat(){
+  const r=await fetch('/new_chat',{method:'POST'});
+  const j=await r.json();
+  currentChat=j.new_chat;
+  document.getElementById('chatBox').innerHTML='';
+  await loadChats();
+}
+
+function renderMessages(msgs){
+  const box=document.getElementById('chatBox');box.innerHTML='';
+  msgs.forEach(m=>{
+    const d=document.createElement('div');
+    d.className='msg '+(m.sender==='user'?'user':'bot');
+    d.innerHTML=(m.sender==='user'?'<strong>Ты:</strong> ':'<strong>Бот:</strong> ')+m.text.replace(/\n/g,'<br>');
+    if(m.image_url){
+      const img=document.createElement('img');
+      img.src=m.image_url;
+      d.appendChild(img);
+    }
+    box.appendChild(d);
+  });
+  box.scrollTop=box.scrollHeight;
+}
+
+document.getElementById('imageInput').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    const img=document.createElement('img');
+    img.src=ev.target.result;
+    const preview=document.createElement('div');
+    preview.className='msg user';
+    preview.appendChild(img);
+    document.getElementById('chatBox').appendChild(preview);
+  };
+  r.readAsDataURL(f);
+});
+
+async function sendMsg(){
+  const input=document.getElementById('msgInput');
+  const fileInput=document.getElementById('imageInput');
+  const text=input.value.trim();
+  if(!text && !fileInput.files[0])return;
+
+  const box=document.getElementById('chatBox');
+  const userDiv=document.createElement('div');
+  userDiv.className='msg user';
+  userDiv.innerHTML='<strong>Ты:</strong> '+text.replace(/\n/g,'<br>');
+  box.appendChild(userDiv);
+  box.scrollTop=box.scrollHeight;
+  input.value='';
+
+  let image_url=null;
+  if(fileInput.files[0]){
+    const fd=new FormData();
+    fd.append('image',fileInput.files[0]);
+    const r=await fetch('/upload_image',{method:'POST',body:fd});
+    const j=await r.json();
+    if(j.image_url){
+      image_url=j.image_url;
+      const img=document.createElement('img');
+      img.src=j.image_url;
+      userDiv.appendChild(img);
+    }
+    fileInput.value='';
+  }
+
+  const r=await fetch('/get',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({msg:text,image_url,chat:currentChat})});
+  const j=await r.json();
+  const botDiv=document.createElement('div');
+  botDiv.className='msg bot';
+  botDiv.innerHTML='<strong>Бот:</strong> '+(j.response||'(нет ответа)').replace(/\n/g,'<br>');
+  box.appendChild(botDiv);
+  box.scrollTop=box.scrollHeight;
+  if(j.chat_name){currentChat=j.chat_name;await loadChats();}
+}
+
+document.getElementById('msgInput').addEventListener('keydown',e=>{
+  if(e.key==='Enter' && !e.shiftKey){
+    e.preventDefault();
+    sendMsg();
+  }
+});
+
+window.onload=async()=>{
+  await loadChats();
+  const chats=await (await fetch('/get_chats')).json();
+  if(chats.length>0){currentChat=chats[0].name;await switchChat(currentChat);}
+};
+</script>
+</body>
+</html>
